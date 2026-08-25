@@ -1,0 +1,99 @@
+import json
+from pathlib import Path
+
+import requests
+
+
+SEASON = 2025
+LIMIT = 100
+
+url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/results/"
+
+all_results = []
+
+offset = 0
+
+while True:
+    params = {
+        "limit": LIMIT,
+        "offset": offset
+    }
+
+    response = requests.get(
+        url,
+        params=params,
+        timeout=30
+    )
+
+    response.raise_for_status()
+
+    data = response.json()
+
+    mrdata = data["MRData"]
+    races = mrdata["RaceTable"]["Races"]
+
+    page_results = []
+
+    for race in races:
+        for result in race.get("Results", []):
+            record = {
+                "season": race["season"],
+                "round": race["round"],
+                "raceName": race["raceName"],
+                "date": race["date"],
+                "circuitId": race["Circuit"]["circuitId"],
+                "result": result
+            }
+
+            page_results.append(record)
+
+    all_results.extend(page_results)
+
+    total = int(mrdata["total"])
+
+    print(
+        f"Offset {offset}: "
+        f"{len(page_results)} resultados recebidos"
+    )
+
+    if len(all_results) >= total:
+        break
+
+    if len(page_results) == 0:
+        break
+
+    offset += LIMIT
+
+
+final_data = {
+    "season": SEASON,
+    "total": len(all_results),
+    "results": all_results
+}
+
+
+output_path = Path(
+    f"data/bronze/season={SEASON}/results.json"
+)
+
+output_path.parent.mkdir(
+    parents=True,
+    exist_ok=True
+)
+
+with open(
+    output_path,
+    "w",
+    encoding="utf-8"
+) as file:
+    json.dump(
+        final_data,
+        file,
+        ensure_ascii=False,
+        indent=4
+    )
+
+
+print()
+print(f"Total salvo: {len(all_results)} resultados")
+print(f"Arquivo salvo em: {output_path}")

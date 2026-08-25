@@ -1,10 +1,6 @@
-import json
-from pathlib import Path
-
 import requests
 
 
-SEASON = 2025
 LIMIT = 30
 
 
@@ -47,46 +43,3 @@ def fetch_paginated_data(url, table_key, records_key):
         offset += LIMIT
 
     return all_records
-
-
-url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/drivers/"
-
-drivers = fetch_paginated_data(
-    url=url,
-    table_key="DriverTable",
-    records_key="Drivers"
-)
-
-
-final_data = {
-    "season": SEASON,
-    "total": len(drivers),
-    "drivers": drivers
-}
-
-
-output_path = Path(
-    f"data/bronze/season={SEASON}/drivers.json"
-)
-
-output_path.parent.mkdir(
-    parents=True,
-    exist_ok=True
-)
-
-with open(
-    output_path,
-    "w",
-    encoding="utf-8"
-) as file:
-    json.dump(
-        final_data,
-        file,
-        ensure_ascii=False,
-        indent=4
-    )
-
-
-print()
-print(f"Total salvo: {len(drivers)} pilotos")
-print(f"Arquivo salvo em: {output_path}")
