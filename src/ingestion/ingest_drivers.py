@@ -1,53 +1,15 @@
 import json
+import sys
 from pathlib import Path
 
-import requests
+from api_client import fetch_paginated_data
 
 
-SEASON = 2025
-LIMIT = 30
+if len(sys.argv) < 2:
+    print("Uso: python ingest_drivers.py <season>")
+    sys.exit(1)
 
-
-def fetch_paginated_data(url, table_key, records_key):
-    all_records = []
-    offset = 0
-
-    while True:
-        params = {
-            "limit": LIMIT,
-            "offset": offset
-        }
-
-        response = requests.get(
-            url,
-            params=params,
-            timeout=30
-        )
-
-        response.raise_for_status()
-
-        data = response.json()
-
-        mrdata = data["MRData"]
-
-        records = mrdata[table_key][records_key]
-
-        all_records.extend(records)
-
-        total = int(mrdata["total"])
-
-        print(
-            f"Offset {offset}: "
-            f"{len(records)} registros recebidos"
-        )
-
-        if len(all_records) >= total:
-            break
-
-        offset += LIMIT
-
-    return all_records
-
+SEASON = sys.argv[1]
 
 url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/drivers/"
 
@@ -57,13 +19,11 @@ drivers = fetch_paginated_data(
     records_key="Drivers"
 )
 
-
 final_data = {
     "season": SEASON,
     "total": len(drivers),
     "drivers": drivers
 }
-
 
 output_path = Path(
     f"data/bronze/season={SEASON}/drivers.json"
@@ -85,7 +45,6 @@ with open(
         ensure_ascii=False,
         indent=4
     )
-
 
 print()
 print(f"Total salvo: {len(drivers)} pilotos")

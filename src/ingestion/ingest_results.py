@@ -1,10 +1,15 @@
 import json
+import sys
 from pathlib import Path
-
 import requests
 
 
-SEASON = 2025
+if len(sys.argv) < 2:
+    print("Uso: python <script>.py <season>")
+    sys.exit(1)
+
+SEASON = sys.argv[1]
+
 LIMIT = 100
 
 url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/results/"

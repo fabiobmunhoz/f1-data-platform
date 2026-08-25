@@ -1,10 +1,14 @@
 import json
+import sys
 from pathlib import Path
-
 from api_client import fetch_paginated_data
 
 
-SEASON = 2025
+if len(sys.argv) < 2:
+    print("Uso: python <script>.py <season>")
+    sys.exit(1)
+
+SEASON = sys.argv[1]
 
 url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/races/"
 
