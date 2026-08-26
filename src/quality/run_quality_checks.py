@@ -14,6 +14,8 @@ SCRIPT_DIR = Path(__file__).parent
 scripts = [
     "check_drivers.py",
     "check_constructors.py",
+    "check_races.py",
+    "check_results.py",
 ]
 
 

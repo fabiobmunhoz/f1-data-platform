@@ -21,8 +21,16 @@ pipeline_steps = [
         "script": SRC_DIR / "transformations" / "run_transformations.py"
     },
     {
-        "name": "Validações de Qualidade",
+        "name": "Validações Silver",
         "script": SRC_DIR / "quality" / "run_quality_checks.py"
+    },
+    {
+        "name": "Construção Gold",
+        "script": SRC_DIR / "transformations" / "build_gold_results.py"
+    },
+    {
+        "name": "Validação Gold",
+        "script": SRC_DIR / "quality" / "check_gold_results.py"
     }
 ]
 

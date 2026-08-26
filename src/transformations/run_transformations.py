@@ -14,6 +14,8 @@ SCRIPT_DIR = Path(__file__).parent
 scripts = [
     "transform_drivers.py",
     "transform_constructors.py",
+    "transform_races.py",
+    "transform_results.py",
 ]
 
 
