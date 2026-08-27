@@ -1,8 +1,14 @@
 import sys
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col
 
+from pyspark.sql.functions import col
+from pathlib import Path
+
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
+from spark_utils import create_spark_session
 
 if len(sys.argv) < 2:
     print("Uso: python transform_constructors_spark.py <season>")
@@ -14,11 +20,8 @@ input_path = f"data/bronze/season={SEASON}/constructors.json"
 output_path = f"data/silver_spark/season={SEASON}/constructors"
 
 
-spark = (
-    SparkSession.builder
-    .appName("F1ConstructorsTransformation")
-    .master("local[*]")
-    .getOrCreate()
+spark = create_spark_session(
+"F1ConstructorsTransformation"
 )
 
 

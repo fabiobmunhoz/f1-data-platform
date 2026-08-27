@@ -1,8 +1,15 @@
 import sys
 
-from pyspark.sql import SparkSession
+
 from pyspark.sql.functions import col, explode, to_date
 
+from pathlib import Path
+
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
+from spark_utils import create_spark_session
 
 if len(sys.argv) < 2:
     print("Uso: python transform_results_spark.py <season>")
@@ -14,12 +21,10 @@ input_path = f"data/bronze/season={SEASON}/results.json"
 output_path = f"data/silver_spark/season={SEASON}/results"
 
 
-spark = (
-    SparkSession.builder
-    .appName("F1ResultsTransformation")
-    .master("local[*]")
-    .getOrCreate()
+spark = create_spark_session(
+    "F1ResultsTransformation"  
 )
+
 
 
 df_raw = (

@@ -1,8 +1,13 @@
 import sys
 
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, count, when
+import sys
+from pathlib import Path
 
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+from pyspark.sql.functions import col, count, when
+from spark_utils import create_spark_session
 
 if len(sys.argv) < 2:
     print("Uso: python check_gold_results_spark.py <season>")
@@ -14,11 +19,8 @@ input_path = (
     f"data/gold_spark/season={SEASON}/fact_race_results"
 )
 
-spark = (
-    SparkSession.builder
-    .appName("F1GoldQualityCheck")
-    .master("local[*]")
-    .getOrCreate()
+spark = create_spark_session(
+    "F1GoldQualityCheck"
 )
 
 df = spark.read.parquet(input_path)

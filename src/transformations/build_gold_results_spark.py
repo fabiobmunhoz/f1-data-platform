@@ -1,8 +1,14 @@
 import sys
 
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, concat_ws
+import sys
+from pathlib import Path
 
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
+from spark_utils import create_spark_session
 
 if len(sys.argv) < 2:
     print("Uso: python build_gold_results_spark.py <season>")
@@ -14,11 +20,8 @@ base_path = f"data/silver_spark/season={SEASON}"
 output_path = f"data/gold_spark/season={SEASON}/fact_race_results"
 
 
-spark = (
-    SparkSession.builder
-    .appName("F1GoldResults")
-    .master("local[*]")
-    .getOrCreate()
+spark = create_spark_session(
+    "F1GoldResults"
 )
 
 

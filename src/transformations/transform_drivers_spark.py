@@ -1,9 +1,20 @@
 import sys
 from pathlib import Path
 
-from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, to_date
+from pyspark.sql.functions import col, to_date
+from pathlib import Path
 
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
+from spark_utils import create_spark_session
+
+from config import (
+    get_bronze_path,
+    get_silver_path
+)
 
 if len(sys.argv) < 2:
     print("Uso: python transform_drivers_spark.py <season>")
@@ -11,17 +22,23 @@ if len(sys.argv) < 2:
 
 SEASON = sys.argv[1]
 
-input_path = f"data/bronze/season={SEASON}/drivers.json"
-output_path = f"data/silver_spark/season={SEASON}/drivers"
+input_path = str(
+    get_bronze_path(
+        SEASON,
+        "drivers"
+    )
+)
+
+output_path = str(
+    get_silver_path(
+        SEASON,
+        "drivers"
+    )
+)
 
 
-spark = (
-    SparkSession.builder
-    .appName("F1DriversTransformation")
-    .master("local[*]")
-    .config("spark.driver.host", "localhost")
-    .config("spark.driver.bindAddress", "127.0.0.1")
-    .getOrCreate()
+spark = create_spark_session(
+    "F1DriversTransformation"
 )
 
 
