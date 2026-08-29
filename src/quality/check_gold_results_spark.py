@@ -1,87 +1,139 @@
 import sys
-
-import sys
 from pathlib import Path
+
+from pyspark.sql.functions import col
 
 sys.path.append(
     str(Path(__file__).resolve().parent.parent)
 )
-from pyspark.sql.functions import col, count, when
+
+from config import get_gold_path
+from logger import get_logger
 from spark_utils import create_spark_session
+
+
+logger = get_logger("check_gold_results")
+
 
 if len(sys.argv) < 2:
     print("Uso: python check_gold_results_spark.py <season>")
     sys.exit(1)
 
+
 SEASON = sys.argv[1]
 
-input_path = (
-    f"data/gold_spark/season={SEASON}/fact_race_results"
+
+logger.info(
+    f"Iniciando validação Gold Spark | season={SEASON}"
 )
+
+
+input_path = str(
+    get_gold_path(
+        SEASON,
+        "fact_race_results"
+    )
+)
+
 
 spark = create_spark_session(
     "F1GoldQualityCheck"
 )
 
-df = spark.read.parquet(input_path)
 
-print()
-print(f"Temporada: {SEASON}")
-print(f"Total de registros Gold: {df.count()}")
+try:
 
-duplicate_count = (
-    df.groupBy(
-        "season",
-        "round",
-        "driver_id"
-    )
-    .count()
-    .filter(col("count") > 1)
-    .count()
-)
-
-print(
-    "Duplicados season/round/driver_id:",
-    duplicate_count
-)
-
-if duplicate_count > 0:
-    raise ValueError(
-        "Falha Gold Spark: existem registros duplicados."
+    df = spark.read.parquet(
+        input_path
     )
 
-critical_columns = [
-    "season",
-    "round",
-    "driver_id",
-    "driver_name",
-    "constructor_id",
-    "constructor_name",
-    "race_name"
-]
 
-for column in critical_columns:
-    null_count = (
+    total_records = df.count()
+
+    logger.info(
+        f"Gold carregada | season={SEASON} | records={total_records}"
+    )
+
+
+    if total_records == 0:
+        raise ValueError(
+            "Falha Gold Spark: tabela vazia."
+        )
+
+
+    duplicate_count = (
         df
-        .filter(col(column).isNull())
+        .groupBy(
+            "season",
+            "round",
+            "driver_id"
+        )
+        .count()
+        .filter(
+            col("count") > 1
+        )
         .count()
     )
 
-    print(
-        f"Nulos em {column}: {null_count}"
+
+    logger.info(
+        f"Duplicados season/round/driver_id: {duplicate_count}"
     )
 
-    if null_count > 0:
+
+    if duplicate_count > 0:
         raise ValueError(
-            f"Falha Gold Spark: {column} possui valores nulos."
+            "Falha Gold Spark: existem registros duplicados."
         )
 
-if df.count() == 0:
-    raise ValueError(
-        "Falha Gold Spark: tabela vazia."
+
+    critical_columns = [
+        "season",
+        "round",
+        "driver_id",
+        "driver_name",
+        "constructor_id",
+        "constructor_name",
+        "race_name"
+    ]
+
+
+    for column in critical_columns:
+
+        null_count = (
+            df
+            .filter(
+                col(column).isNull()
+            )
+            .count()
+        )
+
+
+        logger.info(
+            f"Nulos em {column}: {null_count}"
+        )
+
+
+        if null_count > 0:
+            raise ValueError(
+                f"Falha Gold Spark: {column} possui valores nulos."
+            )
+
+
+    logger.info(
+        f"Gold Spark validada com sucesso | season={SEASON}"
     )
 
-print()
-print("✅ Gold Spark validada com sucesso.")
 
-spark.stop()
+except Exception:
+
+    logger.exception(
+        f"Falha na validação Gold Spark | season={SEASON}"
+    )
+
+    raise
+
+
+finally:
+
+    spark.stop()

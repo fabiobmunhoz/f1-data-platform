@@ -2,25 +2,34 @@ import sys
 from pathlib import Path
 
 from pyspark.sql.functions import col, to_date
-from pyspark.sql.functions import col, to_date
-from pathlib import Path
 
 sys.path.append(
     str(Path(__file__).resolve().parent.parent)
 )
 
+from schemas.drivers_schema import drivers_bronze_schema
+from logger import get_logger
 from spark_utils import create_spark_session
-
 from config import (
     get_bronze_path,
     get_silver_path
 )
 
+
+logger = get_logger("transform_drivers")
+
+
 if len(sys.argv) < 2:
     print("Uso: python transform_drivers_spark.py <season>")
     sys.exit(1)
 
+
 SEASON = sys.argv[1]
+
+logger.info(
+    f"Iniciando transformação Spark de drivers | season={SEASON}"
+)
+
 
 input_path = str(
     get_bronze_path(
@@ -42,64 +51,86 @@ spark = create_spark_session(
 )
 
 
-df_raw = (
-    spark.read
-    .option("multiLine", "true")
-    .json(input_path)
-)
+try:
 
-print("Schema Bronze:")
-df_raw.printSchema()
-
-drivers = (
-    df_raw
-    .selectExpr("explode(drivers) as driver")
-    .select(
-        col("driver.driverId").alias("driver_id"),
-        col("driver.permanentNumber").alias("permanent_number"),
-        col("driver.code").alias("code"),
-        col("driver.givenName").alias("given_name"),
-        col("driver.familyName").alias("family_name"),
-        col("driver.dateOfBirth").alias("date_of_birth"),
-        col("driver.nationality").alias("nationality")
+    df_raw = (
+        spark.read
+        .schema(drivers_bronze_schema)
+        .option("multiLine", "true")
+        .json(input_path)
     )
-)
+
+    print("Schema Bronze:")
+    df_raw.printSchema()
 
 
-drivers = drivers.withColumn(
-    "date_of_birth",
-    to_date(col("date_of_birth"))
-)
+    drivers = (
+        df_raw
+        .selectExpr("explode(drivers) as driver")
+        .select(
+            col("driver.driverId").alias("driver_id"),
+            col("driver.permanentNumber").alias("permanent_number"),
+            col("driver.code").alias("code"),
+            col("driver.givenName").alias("given_name"),
+            col("driver.familyName").alias("family_name"),
+            col("driver.dateOfBirth").alias("date_of_birth"),
+            col("driver.nationality").alias("nationality")
+        )
+    )
 
 
-drivers = drivers.dropDuplicates(
-    ["driver_id"]
-)
+    drivers = drivers.withColumn(
+        "date_of_birth",
+        to_date(col("date_of_birth"))
+    )
 
 
-drivers.printSchema()
-
-drivers.show(
-    10,
-    truncate=False
-)
+    drivers = drivers.dropDuplicates(
+        ["driver_id"]
+    )
 
 
-Path(
-    f"data/silver_spark/season={SEASON}"
-).mkdir(
-    parents=True,
-    exist_ok=True
-)
+    total_records = drivers.count()
+
+    logger.info(
+        f"Transformação concluída | season={SEASON} | records={total_records}"
+    )
 
 
-drivers.write.mode("overwrite").parquet(
-    output_path
-)
+    drivers.printSchema()
+
+    drivers.show(
+        10,
+        truncate=False
+    )
 
 
-print()
-print(f"Transformação Spark concluída para {SEASON}")
+    logger.info(
+        f"Salvando Silver | path={output_path}"
+    )
 
 
-spark.stop()
+    drivers.write.mode(
+        "overwrite"
+    ).parquet(
+        output_path
+    )
+
+
+    logger.info(
+        f"Silver salva com sucesso | season={SEASON}"
+    )
+
+
+except Exception:
+
+    logger.exception(
+        f"Falha na transformação de drivers | season={SEASON}"
+    )
+
+    raise
+
+
+finally:
+
+    spark.stop()

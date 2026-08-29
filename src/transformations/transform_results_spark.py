@@ -1,47 +1,85 @@
 import sys
-
+from pathlib import Path
 
 from pyspark.sql.functions import col, explode, to_date
-
-from pathlib import Path
 
 sys.path.append(
     str(Path(__file__).resolve().parent.parent)
 )
 
+from schemas.results_schema import results_bronze_schema
 from spark_utils import create_spark_session
+from config import (
+    get_bronze_path,
+    get_silver_path
+)
+from logger import get_logger
+
+
+logger = get_logger("transform_results")
+
 
 if len(sys.argv) < 2:
     print("Uso: python transform_results_spark.py <season>")
     sys.exit(1)
 
+
 SEASON = sys.argv[1]
 
-input_path = f"data/bronze/season={SEASON}/results.json"
-output_path = f"data/silver_spark/season={SEASON}/results"
+
+logger.info(
+    f"Iniciando transformação Spark de resultados | season={SEASON}"
+)
+
+
+input_path = str(
+    get_bronze_path(
+        SEASON,
+        "results"
+    )
+)
+
+output_path = str(
+    get_silver_path(
+        SEASON,
+        "results"
+    )
+)
 
 
 spark = create_spark_session(
-    "F1ResultsTransformation"  
+    "F1ResultsTransformation"
 )
 
 
 
-df_raw = (
-    spark.read
-    .option("multiLine", "true")
-    .json(input_path)
-)
+
+# ============================================================
+# TRANSFORMAÇÃO NORMAL
+# ============================================================
+
+try:
+
+    df_raw = (
+        spark.read
+        .schema(results_bronze_schema)
+        .option("multiLine", "true")
+        .json(input_path)
+    )
 
 
-races = (
+    race_results = (
     df_raw
-    .select(explode(col("results")).alias("race_result"))
+    .select(
+        explode(
+            col("results")
+        ).alias("race_result")
+    )
 )
 
 
-results = (
-    races
+    results = (
+    race_results
     .select(
         col("race_result.season")
             .cast("int")
@@ -100,31 +138,57 @@ results = (
             "driver_id"
         ]
     )
-)
+    )
 
 
-print("Schema Silver:")
-results.printSchema()
+    total_records = results.count()
 
-results.orderBy(
-    "round",
-    "position"
-).show(
-    30,
-    truncate=False
-)
+    logger.info(
+        f"Transformação concluída | "
+        f"season={SEASON} | "
+        f"records={total_records}"
+    )
 
 
-results.write.mode("overwrite").parquet(
-    output_path
-)
+    print("Schema Silver:")
+    results.printSchema()
 
 
-print()
-print(
-    f"Transformação Spark de resultados "
-    f"concluída para {SEASON}"
-)
+    results.orderBy(
+        "round",
+        "position"
+    ).show(
+        30,
+        truncate=False
+    )
 
 
-spark.stop()
+    logger.info(
+        f"Salvando Silver | path={output_path}"
+    )
+
+
+    results.write.mode(
+        "overwrite"
+    ).parquet(
+        output_path
+    )
+
+
+    logger.info(
+        f"Silver salva com sucesso | season={SEASON}"
+    )
+
+
+except Exception:
+
+    logger.exception(
+        f"Falha na transformação de resultados | season={SEASON}"
+    )
+
+    raise
+
+
+finally:
+
+    spark.stop()
