@@ -1,7 +1,11 @@
 import json
 import sys
 from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+
 from api_client import fetch_paginated_data
+from config import get_bronze_path
 
 
 
@@ -26,8 +30,9 @@ final_data = {
     "constructors": constructors
 }
 
-output_path = Path(
-    f"data/bronze/season={SEASON}/constructors.json"
+output_path = get_bronze_path(
+    SEASON,
+    "constructors"
 )
 
 output_path.parent.mkdir(

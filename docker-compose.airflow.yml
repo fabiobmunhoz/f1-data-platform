@@ -53,6 +53,7 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__WEB_SERVER_MASTER_TIMEOUT: "300"
       AIRFLOW__WEBSERVER__SECRET_KEY: "f1-data-platform-airflow-secret-key"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Sao_Paulo
 
     ports:
       - "8080:8080"
@@ -77,6 +78,7 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__SECRET_KEY: "f1-data-platform-airflow-secret-key"
+      AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Sao_Paulo
 
     volumes:
       - ./dags:/opt/airflow/dags
