@@ -16,6 +16,9 @@ scripts = [
     "ingest_constructors.py",
     "ingest_races.py",
     "ingest_results.py",
+    "ingest_driver_standings.py",
+    "ingest_constructor_standings.py",
+    "ingest_sprint_results.py",
 ]
 
 

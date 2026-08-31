@@ -28,14 +28,17 @@ def fetch_paginated_data(url, table_key, records_key):
 
         records = mrdata[table_key][records_key]
 
-        all_records.extend(records)
-
-        total = int(mrdata["total"])
-
         print(
             f"Offset {offset}: "
             f"{len(records)} registros recebidos"
         )
+
+        if not records:
+            break
+
+        all_records.extend(records)
+
+        total = int(mrdata["total"])
 
         if len(all_records) >= total:
             break
