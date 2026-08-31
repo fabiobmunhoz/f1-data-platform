@@ -1,10 +1,15 @@
 # Virtual environment
 .venv/
+
+# Local data
 data/
 
 # Python cache
 __pycache__/
 *.py[cod]
+
+# Pytest cache
+.pytest_cache/
 
 # Environment variables / secrets
 .env
@@ -15,14 +20,14 @@ __pycache__/
 # Jupyter
 .ipynb_checkpoints/
 
-# Local data
-data/bronze/
-data/silver/
-data/gold/
-
 # Logs
 *.log
 logs/
+
+# Spark temporary files
+.sparkStaging/
+metastore_db/
+derby.log
 
 # OS files
 .DS_Store
