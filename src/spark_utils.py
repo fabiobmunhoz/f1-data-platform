@@ -17,7 +17,7 @@ def create_spark_session(app_name):
             builder
             .config(
                 "spark.jars.packages",
-                "org.apache.hadoop:hadoop-aws:3.4.1"
+                "org.apache.hadoop:hadoop-aws:3.5.0"
             )
             .config(
                 "spark.hadoop.fs.s3a.impl",
