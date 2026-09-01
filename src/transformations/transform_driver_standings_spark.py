@@ -18,7 +18,8 @@ from schemas.driver_standings_schema import (
 from spark_utils import create_spark_session
 from config import (
     get_bronze_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -42,14 +43,15 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_bronze_path(
         SEASON,
         "driver_standings"
     )
 )
 
-output_path = str(
+
+output_path = to_spark_path(
     get_silver_path(
         SEASON,
         "driver_standings"
@@ -72,8 +74,6 @@ try:
     )
 
 
-    # Abre o primeiro array:
-    # standings
     standings = (
         df_raw
         .select(
@@ -84,8 +84,6 @@ try:
     )
 
 
-    # Abre o segundo array:
-    # DriverStandings
     driver_standings = (
         standings
         .select(
@@ -171,7 +169,6 @@ try:
 
 
     print("Schema Silver:")
-
     final_df.printSchema()
 
 
@@ -188,10 +185,10 @@ try:
     )
 
 
-    final_df.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        final_df.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

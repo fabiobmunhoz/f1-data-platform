@@ -17,7 +17,8 @@ from schemas.sprint_results_schema import (
 from spark_utils import create_spark_session
 from config import (
     get_bronze_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -35,14 +36,15 @@ if len(sys.argv) < 2:
 SEASON = sys.argv[1]
 
 
-input_path = str(
+input_path = to_spark_path(
     get_bronze_path(
         SEASON,
         "sprint_results"
     )
 )
 
-output_path = str(
+
+output_path = to_spark_path(
     get_silver_path(
         SEASON,
         "sprint_results"
@@ -190,10 +192,10 @@ try:
     )
 
 
-    final_df.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        final_df.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

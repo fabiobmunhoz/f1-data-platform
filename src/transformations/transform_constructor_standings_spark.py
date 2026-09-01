@@ -16,7 +16,8 @@ from schemas.constructor_standings_schema import (
 from spark_utils import create_spark_session
 from config import (
     get_bronze_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -40,14 +41,15 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_bronze_path(
         SEASON,
         "constructor_standings"
     )
 )
 
-output_path = str(
+
+output_path = to_spark_path(
     get_silver_path(
         SEASON,
         "constructor_standings"
@@ -165,10 +167,10 @@ try:
     )
 
 
-    final_df.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        final_df.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 
