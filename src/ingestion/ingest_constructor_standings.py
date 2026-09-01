@@ -1,4 +1,3 @@
-import json
 import sys
 from pathlib import Path
 
@@ -8,6 +7,7 @@ sys.path.append(
 
 from api_client import fetch_paginated_data
 from config import get_bronze_path
+from storage import save_json
 
 
 if len(sys.argv) < 2:
@@ -43,24 +43,10 @@ output_path = get_bronze_path(
 )
 
 
-output_path.parent.mkdir(
-    parents=True,
-    exist_ok=True
+save_json(
+    final_data,
+    output_path
 )
-
-
-with open(
-    output_path,
-    "w",
-    encoding="utf-8"
-) as file:
-
-    json.dump(
-        final_data,
-        file,
-        ensure_ascii=False,
-        indent=4
-    )
 
 
 print()
@@ -68,4 +54,6 @@ print(
     f"Total salvo: {len(standings_lists)} "
     f"listas de classificação"
 )
-print(f"Arquivo salvo em: {output_path}")
+print(
+    f"Arquivo salvo em: {output_path}"
+)

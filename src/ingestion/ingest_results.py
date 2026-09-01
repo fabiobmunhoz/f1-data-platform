@@ -1,30 +1,38 @@
-import json
 import sys
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parent.parent))
-
-from api_client import fetch_paginated_data
-from config import get_bronze_path
-
 import requests
+
+sys.path.append(
+    str(Path(__file__).resolve().parent.parent)
+)
+
+from config import get_bronze_path
+from storage import save_json
 
 
 if len(sys.argv) < 2:
-    print("Uso: python <script>.py <season>")
+    print("Uso: python ingest_results.py <season>")
     sys.exit(1)
+
 
 SEASON = sys.argv[1]
 
 LIMIT = 100
 
-url = f"https://api.jolpi.ca/ergast/f1/{SEASON}/results/"
+url = (
+    f"https://api.jolpi.ca/ergast/f1/"
+    f"{SEASON}/results/"
+)
+
 
 all_results = []
 
 offset = 0
 
+
 while True:
+
     params = {
         "limit": LIMIT,
         "offset": offset
@@ -46,7 +54,9 @@ while True:
     page_results = []
 
     for race in races:
+
         for result in race.get("Results", []):
+
             record = {
                 "season": race["season"],
                 "round": race["round"],
@@ -88,24 +98,17 @@ output_path = get_bronze_path(
     "results"
 )
 
-output_path.parent.mkdir(
-    parents=True,
-    exist_ok=True
-)
 
-with open(
-    output_path,
-    "w",
-    encoding="utf-8"
-) as file:
-    json.dump(
-        final_data,
-        file,
-        ensure_ascii=False,
-        indent=4
-    )
+save_json(
+    final_data,
+    output_path
+)
 
 
 print()
-print(f"Total salvo: {len(all_results)} resultados")
-print(f"Arquivo salvo em: {output_path}")
+print(
+    f"Total salvo: {len(all_results)} resultados"
+)
+print(
+    f"Arquivo salvo em: {output_path}"
+)
