@@ -24,7 +24,18 @@ DATA_DIR = PROJECT_ROOT / "data"
 BRONZE_DIR = DATA_DIR / "bronze"
 SILVER_DIR = DATA_DIR / "silver_spark"
 GOLD_DIR = DATA_DIR / "gold_spark"
+def to_spark_path(path):
 
+    path = str(path)
+
+    if path.startswith("s3://"):
+        return path.replace(
+            "s3://",
+            "s3a://",
+            1
+        )
+
+    return path
 
 def get_bronze_path(season, dataset):
 

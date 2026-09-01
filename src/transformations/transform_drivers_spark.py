@@ -12,7 +12,8 @@ from logger import get_logger
 from spark_utils import create_spark_session
 from config import (
     get_bronze_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 
 
@@ -31,14 +32,14 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_bronze_path(
         SEASON,
         "drivers"
     )
 )
 
-output_path = str(
+output_path = to_spark_path(
     get_silver_path(
         SEASON,
         "drivers"
@@ -60,44 +61,67 @@ try:
         .json(input_path)
     )
 
+
     print("Schema Bronze:")
     df_raw.printSchema()
 
 
     drivers = (
         df_raw
-        .selectExpr("explode(drivers) as driver")
+        .selectExpr(
+            "explode(drivers) as driver"
+        )
         .select(
-            col("driver.driverId").alias("driver_id"),
-            col("driver.permanentNumber").alias("permanent_number"),
-            col("driver.code").alias("code"),
-            col("driver.givenName").alias("given_name"),
-            col("driver.familyName").alias("family_name"),
-            col("driver.dateOfBirth").alias("date_of_birth"),
-            col("driver.nationality").alias("nationality")
+            col("driver.driverId")
+                .alias("driver_id"),
+
+            col("driver.permanentNumber")
+                .alias("permanent_number"),
+
+            col("driver.code")
+                .alias("code"),
+
+            col("driver.givenName")
+                .alias("given_name"),
+
+            col("driver.familyName")
+                .alias("family_name"),
+
+            col("driver.dateOfBirth")
+                .alias("date_of_birth"),
+
+            col("driver.nationality")
+                .alias("nationality")
         )
     )
 
 
-    drivers = drivers.withColumn(
-        "date_of_birth",
-        to_date(col("date_of_birth"))
-    )
-
-
-    drivers = drivers.dropDuplicates(
-        ["driver_id"]
+    drivers = (
+        drivers
+        .withColumn(
+            "date_of_birth",
+            to_date(
+                col("date_of_birth")
+            )
+        )
+        .dropDuplicates(
+            ["driver_id"]
+        )
     )
 
 
     total_records = drivers.count()
 
+
     logger.info(
-        f"Transformação concluída | season={SEASON} | records={total_records}"
+        f"Transformação concluída | "
+        f"season={SEASON} | "
+        f"records={total_records}"
     )
 
 
     drivers.printSchema()
+
 
     drivers.show(
         10,
@@ -110,10 +134,10 @@ try:
     )
 
 
-    drivers.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        drivers.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 
