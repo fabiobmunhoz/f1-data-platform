@@ -13,7 +13,8 @@ sys.path.append(
 from spark_utils import create_spark_session
 from config import (
     get_silver_path,
-    get_gold_path
+    get_gold_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -36,14 +37,15 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_silver_path(
         SEASON,
         "driver_standings"
     )
 )
 
-output_path = str(
+
+output_path = to_spark_path(
     get_gold_path(
         SEASON,
         "driver_standings"
@@ -68,17 +70,11 @@ try:
         silver_df
         .select(
             col("season"),
-
             col("round"),
-
             col("position"),
-
             col("driver_id"),
-
             col("driver_name"),
-
             col("driver_code"),
-
             col("driver_nationality"),
 
             concat_ws(
@@ -87,7 +83,6 @@ try:
             ).alias("constructor_names"),
 
             col("points"),
-
             col("wins")
         )
         .dropDuplicates(
@@ -111,7 +106,6 @@ try:
 
 
     print("Schema Gold:")
-
     gold_df.printSchema()
 
 
@@ -128,10 +122,10 @@ try:
     )
 
 
-    gold_df.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        gold_df.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

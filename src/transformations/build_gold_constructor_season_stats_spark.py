@@ -17,7 +17,8 @@ sys.path.append(
 from spark_utils import create_spark_session
 from config import (
     get_gold_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -40,21 +41,21 @@ logger.info(
 )
 
 
-race_input_path = str(
+race_input_path = to_spark_path(
     get_gold_path(
         SEASON,
         "fact_race_results"
     )
 )
 
-sprint_input_path = str(
+sprint_input_path = to_spark_path(
     get_silver_path(
         SEASON,
         "sprint_results"
     )
 )
 
-output_path = str(
+output_path = to_spark_path(
     get_gold_path(
         SEASON,
         "constructor_season_stats"
@@ -80,6 +81,10 @@ try:
         .parquet(sprint_input_path)
     )
 
+
+    # ========================================================
+    # MÉTRICAS DE CORRIDAS
+    # ========================================================
 
     race_stats = (
         race_df
@@ -130,6 +135,10 @@ try:
     )
 
 
+    # ========================================================
+    # MÉTRICAS DE SPRINT
+    # ========================================================
+
     sprint_stats = (
         sprint_df
         .groupBy(
@@ -154,6 +163,10 @@ try:
         )
     )
 
+
+    # ========================================================
+    # CONSOLIDAÇÃO DA TEMPORADA
+    # ========================================================
 
     constructor_stats = (
         race_stats
@@ -203,15 +216,19 @@ try:
     )
 
 
+    # ========================================================
+    # SALVAMENTO
+    # ========================================================
+
     logger.info(
         f"Salvando Gold | path={output_path}"
     )
 
 
-    constructor_stats.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        constructor_stats.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

@@ -17,7 +17,8 @@ sys.path.append(
 from spark_utils import create_spark_session
 from config import (
     get_gold_path,
-    get_silver_path
+    get_silver_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -44,21 +45,21 @@ logger.info(
 # PATHS
 # ============================================================
 
-input_path = str(
+input_path = to_spark_path(
     get_gold_path(
         SEASON,
         "fact_race_results"
     )
 )
 
-sprint_input_path = str(
+sprint_input_path = to_spark_path(
     get_silver_path(
         SEASON,
         "sprint_results"
     )
 )
 
-output_path = str(
+output_path = to_spark_path(
     get_gold_path(
         SEASON,
         "driver_season_stats"
@@ -81,12 +82,16 @@ try:
         spark.read
         .parquet(input_path)
     )
-    
+
     sprint_df = (
         spark.read
         .parquet(sprint_input_path)
     )
 
+
+    # ========================================================
+    # MÉTRICAS DE SPRINT
+    # ========================================================
 
     sprint_stats = (
         sprint_df
@@ -171,7 +176,6 @@ try:
             "driver_nationality"
         )
         .agg(
-
             countDistinct(
                 "round"
             ).alias("races"),
@@ -203,7 +207,7 @@ try:
             sum(
                 "is_dns"
             ).alias("dns"),
-            
+
             avg(
                 when(
                     col("grid") > 0,
@@ -219,10 +223,8 @@ try:
 
 
     # ========================================================
-    # ORDENAÇÃO
+    # JUNÇÃO COM SPRINTS
     # ========================================================
-
-    
 
     driver_stats = (
         driver_stats
@@ -248,12 +250,18 @@ try:
         )
     )
 
+
+    # ========================================================
+    # ORDENAÇÃO
+    # ========================================================
+
     driver_stats = (
         driver_stats
-            .orderBy(
+        .orderBy(
             col("total_points").desc()
-            )
+        )
     )
+
 
     total_records = driver_stats.count()
 
@@ -284,10 +292,10 @@ try:
     )
 
 
-    driver_stats.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        driver_stats.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

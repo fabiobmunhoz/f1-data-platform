@@ -11,7 +11,8 @@ from spark_utils import create_spark_session
 
 from config import (
     get_silver_path,
-    get_gold_path
+    get_gold_path,
+    to_spark_path
 )
 
 from logger import get_logger
@@ -33,35 +34,35 @@ logger.info(
 )
 
 
-results_path = str(
+results_path = to_spark_path(
     get_silver_path(
         SEASON,
         "results"
     )
 )
 
-drivers_path = str(
+drivers_path = to_spark_path(
     get_silver_path(
         SEASON,
         "drivers"
     )
 )
 
-constructors_path = str(
+constructors_path = to_spark_path(
     get_silver_path(
         SEASON,
         "constructors"
     )
 )
 
-races_path = str(
+races_path = to_spark_path(
     get_silver_path(
         SEASON,
         "races"
     )
 )
 
-output_path = str(
+output_path = to_spark_path(
     get_gold_path(
         SEASON,
         "fact_race_results"
@@ -97,12 +98,15 @@ try:
         drivers
         .select(
             "driver_id",
+
             concat_ws(
                 " ",
                 col("given_name"),
                 col("family_name")
             ).alias("driver_name"),
-            col("nationality").alias("driver_nationality")
+
+            col("nationality")
+                .alias("driver_nationality")
         )
     )
 
@@ -111,7 +115,9 @@ try:
         constructors
         .select(
             "constructor_id",
-            col("name").alias("constructor_name")
+
+            col("name")
+                .alias("constructor_name")
         )
     )
 
@@ -141,39 +147,48 @@ try:
         )
         .join(
             races_gold,
-            on=["season", "round"],
+            on=[
+                "season",
+                "round"
+            ],
             how="left"
         )
     )
 
 
-    gold = gold.select(
-        "season",
-        "round",
-        "race_name",
-        "race_date",
-        "circuit_id",
-        "circuit_name",
-        "country",
-        "driver_id",
-        "driver_name",
-        "driver_nationality",
-        "constructor_id",
-        "constructor_name",
-        "grid",
-        "position",
-        "position_text",
-        "points",
-        "laps",
-        "status",
-        "fastest_lap_rank"
+    gold = (
+        gold
+        .select(
+            "season",
+            "round",
+            "race_name",
+            "race_date",
+            "circuit_id",
+            "circuit_name",
+            "country",
+            "driver_id",
+            "driver_name",
+            "driver_nationality",
+            "constructor_id",
+            "constructor_name",
+            "grid",
+            "position",
+            "position_text",
+            "points",
+            "laps",
+            "status",
+            "fastest_lap_rank"
+        )
     )
 
 
     total_records = gold.count()
 
+
     logger.info(
-        f"Gold construída | season={SEASON} | records={total_records}"
+        f"Gold construída | "
+        f"season={SEASON} | "
+        f"records={total_records}"
     )
 
 
@@ -195,10 +210,10 @@ try:
     )
 
 
-    gold.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        gold.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 

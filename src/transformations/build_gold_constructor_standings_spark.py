@@ -10,7 +10,8 @@ sys.path.append(
 from spark_utils import create_spark_session
 from config import (
     get_silver_path,
-    get_gold_path
+    get_gold_path,
+    to_spark_path
 )
 from logger import get_logger
 
@@ -33,14 +34,15 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_silver_path(
         SEASON,
         "constructor_standings"
     )
 )
 
-output_path = str(
+
+output_path = to_spark_path(
     get_gold_path(
         SEASON,
         "constructor_standings"
@@ -110,10 +112,10 @@ try:
     )
 
 
-    gold_df.write.mode(
-        "overwrite"
-    ).parquet(
-        output_path
+    (
+        gold_df.write
+        .mode("overwrite")
+        .parquet(output_path)
     )
 
 
