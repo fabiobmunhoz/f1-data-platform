@@ -11,7 +11,10 @@ sys.path.append(
 )
 
 from spark_utils import create_spark_session
-from config import get_gold_path
+from config import (
+    get_gold_path,
+    to_spark_path
+)
 from logger import get_logger
 
 
@@ -28,7 +31,7 @@ if len(sys.argv) < 2:
 SEASON = sys.argv[1]
 
 
-input_path = str(
+input_path = to_spark_path(
     get_gold_path(
         SEASON,
         "driver_standings"
@@ -107,8 +110,8 @@ try:
     invalid_positions = (
         df
         .filter(
-            (col("position").isNull()) |
-            (col("position") <= 0)
+            col("position").isNull()
+            | (col("position") <= 0)
         )
         .count()
     )

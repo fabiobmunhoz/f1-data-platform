@@ -8,7 +8,10 @@ sys.path.append(
 )
 
 from spark_utils import create_spark_session
-from config import get_gold_path
+from config import (
+    get_gold_path,
+    to_spark_path
+)
 from logger import get_logger
 
 
@@ -25,7 +28,7 @@ if len(sys.argv) < 2:
 SEASON = sys.argv[1]
 
 
-input_path = str(
+input_path = to_spark_path(
     get_gold_path(
         SEASON,
         "constructor_standings"
@@ -46,7 +49,11 @@ try:
     )
 
 
-    df = spark.read.parquet(input_path)
+    df = (
+        spark.read
+        .parquet(input_path)
+    )
+
 
     total_records = df.count()
 
@@ -64,6 +71,7 @@ try:
         )
         .count()
     )
+
 
     if null_constructor_id > 0:
         raise ValueError(
@@ -88,6 +96,7 @@ try:
         .count()
     )
 
+
     if duplicate_constructors > 0:
         raise ValueError(
             f"Encontradas {duplicate_constructors} duplicidades "
@@ -103,6 +112,7 @@ try:
         )
         .count()
     )
+
 
     if invalid_positions > 0:
         raise ValueError(
@@ -125,6 +135,7 @@ try:
         )
         .count()
     )
+
 
     if duplicate_positions > 0:
         raise ValueError(

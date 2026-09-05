@@ -11,7 +11,10 @@ sys.path.append(
 )
 
 from spark_utils import create_spark_session
-from config import get_gold_path
+from config import (
+    get_gold_path,
+    to_spark_path
+)
 from logger import get_logger
 
 
@@ -28,14 +31,15 @@ if len(sys.argv) < 2:
 SEASON = sys.argv[1]
 
 
-stats_path = str(
+stats_path = to_spark_path(
     get_gold_path(
         SEASON,
         "driver_season_stats"
     )
 )
 
-standings_path = str(
+
+standings_path = to_spark_path(
     get_gold_path(
         SEASON,
         "driver_standings"
@@ -62,7 +66,8 @@ try:
             "season",
             "driver_id",
             "driver_name",
-            col("total_points").alias("calculated_points")
+            col("total_points")
+                .alias("calculated_points")
         )
     )
 
@@ -73,7 +78,8 @@ try:
         .select(
             "season",
             "driver_id",
-            col("points").alias("official_points")
+            col("points")
+                .alias("official_points")
         )
     )
 
@@ -98,6 +104,7 @@ try:
 
     print()
     print("Reconciliação de pontos:")
+
 
     reconciliation.orderBy(
         col("calculated_points").desc()
@@ -140,6 +147,7 @@ try:
         print()
         print("Pilotos com divergência:")
 
+
         reconciliation.filter(
             abs(
                 col("points_difference")
@@ -147,6 +155,7 @@ try:
         ).show(
             truncate=False
         )
+
 
         raise ValueError(
             f"Reconciliação falhou: "

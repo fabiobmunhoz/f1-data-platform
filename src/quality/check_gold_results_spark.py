@@ -7,7 +7,10 @@ sys.path.append(
     str(Path(__file__).resolve().parent.parent)
 )
 
-from config import get_gold_path
+from config import (
+    get_gold_path,
+    to_spark_path
+)
 from logger import get_logger
 from spark_utils import create_spark_session
 
@@ -28,7 +31,7 @@ logger.info(
 )
 
 
-input_path = str(
+input_path = to_spark_path(
     get_gold_path(
         SEASON,
         "fact_race_results"
@@ -43,15 +46,19 @@ spark = create_spark_session(
 
 try:
 
-    df = spark.read.parquet(
-        input_path
+    df = (
+        spark.read
+        .parquet(input_path)
     )
 
 
     total_records = df.count()
 
+
     logger.info(
-        f"Gold carregada | season={SEASON} | records={total_records}"
+        f"Gold carregada | "
+        f"season={SEASON} | "
+        f"records={total_records}"
     )
 
 
@@ -77,7 +84,8 @@ try:
 
 
     logger.info(
-        f"Duplicados season/round/driver_id: {duplicate_count}"
+        f"Duplicados season/round/driver_id: "
+        f"{duplicate_count}"
     )
 
 
@@ -116,19 +124,22 @@ try:
 
         if null_count > 0:
             raise ValueError(
-                f"Falha Gold Spark: {column} possui valores nulos."
+                f"Falha Gold Spark: "
+                f"{column} possui valores nulos."
             )
 
 
     logger.info(
-        f"Gold Spark validada com sucesso | season={SEASON}"
+        f"Gold Spark validada com sucesso | "
+        f"season={SEASON}"
     )
 
 
 except Exception:
 
     logger.exception(
-        f"Falha na validação Gold Spark | season={SEASON}"
+        f"Falha na validação Gold Spark | "
+        f"season={SEASON}"
     )
 
     raise
