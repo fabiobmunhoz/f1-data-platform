@@ -18,4 +18,5 @@ RUN pip install --no-cache-dir \
     pyspark==4.2.0 \
     pandas \
     pyarrow \
-    requests
+    requests \
+    boto3==1.43.85

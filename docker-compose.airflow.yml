@@ -22,6 +22,10 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
 
+      DATA_STORAGE: ${DATA_STORAGE:-local}
+      S3_BUCKET: ${S3_BUCKET:-f1-data-platform-fabio}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+
     volumes:
       - ./dags:/opt/airflow/dags
       - ./:/opt/airflow/project
@@ -55,6 +59,10 @@ services:
       AIRFLOW__WEBSERVER__SECRET_KEY: "f1-data-platform-airflow-secret-key"
       AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Sao_Paulo
 
+      DATA_STORAGE: ${DATA_STORAGE:-local}
+      S3_BUCKET: ${S3_BUCKET:-f1-data-platform-fabio}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+
     ports:
       - "8080:8080"
 
@@ -79,6 +87,10 @@ services:
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
       AIRFLOW__WEBSERVER__SECRET_KEY: "f1-data-platform-airflow-secret-key"
       AIRFLOW__CORE__DEFAULT_TIMEZONE: America/Sao_Paulo
+
+      DATA_STORAGE: ${DATA_STORAGE:-local}
+      S3_BUCKET: ${S3_BUCKET:-f1-data-platform-fabio}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
 
     volumes:
       - ./dags:/opt/airflow/dags
