@@ -16,6 +16,8 @@ with DAG(
     description="Pipeline de dados de Formula 1 com PySpark",
     default_args=default_args,
     start_date=datetime(2025, 1, 1),
+    max_active_runs=1,
+    max_active_tasks=1,
     schedule="0 8 * * 1",
     catchup=False,
     tags=["f1", "spark", "data-engineering"],
