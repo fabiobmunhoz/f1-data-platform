@@ -99,7 +99,14 @@ services:
       - f1-data-volume:/opt/airflow/project/data
       - spark-ivy-cache:/home/airflow/.ivy2.5.2
 
-    command: scheduler
+    user: root
+
+    command: >
+      bash -c "
+      mkdir -p /home/airflow/.ivy2.5.2 &&
+      chown -R airflow:root /home/airflow/.ivy2.5.2 &&
+      exec runuser -u airflow -- airflow scheduler
+      "
 
 
 volumes:
