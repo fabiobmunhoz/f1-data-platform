@@ -97,6 +97,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./:/opt/airflow/project
       - f1-data-volume:/opt/airflow/project/data
+      - spark-ivy-cache:/home/airflow/.ivy2.5.2
 
     command: scheduler
 
@@ -104,3 +105,4 @@ services:
 volumes:
   postgres-db-volume:
   f1-data-volume:
+  spark-ivy-cache:
